@@ -28,21 +28,25 @@ class BarcodeActivity : AppCompatActivity() {
     private lateinit var cameraSource: CameraSource
     private lateinit var detector: BarcodeDetector
 
+    // Runs when the activity is created
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_barcode)
 
+        // Get permission to use the camera
         if(ContextCompat.checkSelfPermission(
                 this@BarcodeActivity,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
         ) {
             askForCameraPermission()
         }
+        // If permission is already granted, set up the camera
         else {
             setupControls()
         }
     }
 
+    // Set up the camera to detect barcodes
     private fun setupControls() {
         detector = BarcodeDetector.Builder(this).build()
         cameraSource = CameraSource.Builder(this, detector)
@@ -52,6 +56,7 @@ class BarcodeActivity : AppCompatActivity() {
         detector.setProcessor(processor)
     }
 
+    // Ask for permission to use the camera
     private fun askForCameraPermission() {
         ActivityCompat.requestPermissions(
             this@BarcodeActivity,
@@ -59,22 +64,29 @@ class BarcodeActivity : AppCompatActivity() {
             requestCodeCameraPermission)
     }
 
+    // Runs when the user responds to the permission request
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
+        // Run the default onRequestPermissionsResult method
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        // Check that the response is for the camera permission request
         if (requestCode == requestCodeCameraPermission && grantResults.isNotEmpty()) {
+            // If the permission was granted, set up the camera
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 setupControls()
             }
+            // If the permission was denied, show a message
             else {
                 Toast.makeText(applicationContext, "Permission denied", Toast.LENGTH_LONG).show()
             }
         }
     }
 
+    // Surface callback for the camera
     private val surfaceCallBack = object : SurfaceHolder.Callback {
 
         override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
@@ -96,6 +108,7 @@ class BarcodeActivity : AppCompatActivity() {
 
     }
 
+    // Processor for barcode detection
     private val processor = object : Detector.Processor<Barcode> {
         override fun release() {
         }
