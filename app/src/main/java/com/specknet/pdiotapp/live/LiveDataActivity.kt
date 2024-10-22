@@ -77,7 +77,7 @@ class LiveDataActivity : AppCompatActivity() {
                     val z = liveData.accelZ
 
                     time += 1
-                    updateGraph("respeck", x, y, z)
+                    updateGraph("respeck", x, y, z, "Ascending")
 
                 }
             }
@@ -110,7 +110,7 @@ class LiveDataActivity : AppCompatActivity() {
                     val z = liveData.accelZ
 
                     time += 1
-                    updateGraph("thingy", x, y, z)
+                    updateGraph("thingy", x, y, z, "Ascending")
 
                 }
             }
@@ -217,7 +217,7 @@ class LiveDataActivity : AppCompatActivity() {
         thingyChart.invalidate()
     }
 
-    fun updateGraph(graph: String, x: Float, y: Float, z: Float) {
+    fun updateGraph(graph: String, x: Float, y: Float, z: Float, classifier: String) {
         // take the first element from the queue
         // and update the graph with it
         if (graph == "respeck") {
