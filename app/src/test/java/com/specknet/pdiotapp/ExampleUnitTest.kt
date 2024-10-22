@@ -1,5 +1,6 @@
 package com.specknet.pdiotapp
 
+import com.specknet.pdiotapp.utils.RespeckAnalysis
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -9,9 +10,11 @@ import org.junit.Assert.*
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
-class ExampleUnitTest {
+class RespeckAnalysisUnitTest {
     @Test
-    fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+    fun readCSV() {
+        val respeckAnalysis = RespeckAnalysis(null)
+        val data = respeckAnalysis.readCSV("/Users/oathompsonjones/Documents/Edinburgh/Year-4/PDIoTS/pdiotapp/app/src/main/java/com/specknet/pdiotapp/trainingdata/PDIoT2324/Respeck/DailyActivities/ascending/s1_respeck_ascending_breathingNormal.csv")
+        assert(data != null)
     }
 }
