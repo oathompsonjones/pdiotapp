@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-
+import org.tensorflow.Graph;
+import org.tensorflow.Session;
+import org.tensorflow.Tensor;
 
 public class RespeckAnalysis {
 
@@ -29,9 +31,14 @@ public class RespeckAnalysis {
         return data;
     }
 
+
+    // How to take a threshold for the data to be useful
+
     public void analyseRespeckData(Arrays respeckData) {
 
     }
+
+
 
 
 }
