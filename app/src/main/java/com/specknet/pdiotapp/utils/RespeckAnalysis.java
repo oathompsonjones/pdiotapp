@@ -19,19 +19,6 @@ public class RespeckAnalysis {
         this.respeckData = respeckData;
     }
 
-    public List<List<String>> readCSV(String filePath) {
-        List<List<String>> data = new ArrayList<>();
-        try (Scanner sc = new Scanner(new File(filePath))) {
-            sc.useDelimiter("\n");
-            while (sc.hasNext())
-                data.add(Arrays.asList(sc.next().split(",")));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return data;
-    }
-
-
     // How to take a threshold for the data to be useful
 
     public void analyseRespeckData(Arrays respeckData) {
