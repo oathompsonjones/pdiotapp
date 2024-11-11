@@ -1,6 +1,5 @@
 package com.specknet.pdiotapp
 
-import com.specknet.pdiotapp.utils.RespeckAnalysis
 import org.junit.Test
 
 import org.junit.Assert.*

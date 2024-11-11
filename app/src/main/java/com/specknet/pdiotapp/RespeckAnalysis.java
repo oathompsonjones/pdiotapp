@@ -1,13 +1,8 @@
-package com.specknet.pdiotapp.utils;
+package com.specknet.pdiotapp;
 
-import java.io.File;
-import java.util.ArrayList;
+import com.specknet.pdiotapp.utils.RespeckData;
+
 import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
-import org.tensorflow.Graph;
-import org.tensorflow.Session;
-import org.tensorflow.Tensor;
 
 public class RespeckAnalysis {
 
