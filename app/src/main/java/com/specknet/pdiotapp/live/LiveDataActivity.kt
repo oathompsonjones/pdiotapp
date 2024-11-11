@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -20,7 +21,11 @@ import com.specknet.pdiotapp.R
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.RESpeckLiveData
 import com.specknet.pdiotapp.utils.ThingyLiveData
+import org.tensorflow.lite.Interpreter
+import java.io.FileInputStream
+import java.nio.channels.FileChannel
 import kotlin.collections.ArrayList
+import com.opencsv.CSVReader
 
 
 class LiveDataActivity : AppCompatActivity() {
@@ -48,6 +53,10 @@ class LiveDataActivity : AppCompatActivity() {
     lateinit var looperRespeck: Looper
     lateinit var looperThingy: Looper
 
+    // classification variables
+    lateinit var outputView: TextView
+    lateinit var tflite: Interpreter
+
     val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
     val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
 
@@ -56,6 +65,8 @@ class LiveDataActivity : AppCompatActivity() {
         setContentView(R.layout.activity_live_data)
 
         setupCharts()
+
+        setupClassification()
 
         // set up the broadcast receiver
         respeckLiveUpdateReceiver = object : BroadcastReceiver() {
@@ -124,7 +135,6 @@ class LiveDataActivity : AppCompatActivity() {
         this.registerReceiver(thingyLiveUpdateReceiver, filterTestThingy, null, handlerThingy)
 
     }
-
 
     fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
@@ -249,6 +259,46 @@ class LiveDataActivity : AppCompatActivity() {
 
     }
 
+    fun readCSVData(filename: String): List<FloatArray> {
+        val reader = CSVReader(assets.open(filename).reader())
+        val data = mutableListOf<FloatArray>()
+        var nextLine = reader.readNext()
+        while (nextLine != null) {
+            data.add(nextLine.map { it.toFloat() }.toFloatArray())
+            nextLine = reader.readNext()
+        }
+        return data
+    }
+
+    fun setupClassification() {
+        val file = assets.openFd("model.tflite")
+        tflite = Interpreter(FileInputStream(file.fileDescriptor).channel
+            .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
+
+        val inputShape = tflite.getInputTensor(0).shape();
+        val inputDataType = tflite.getInputTensor(0).dataType();
+
+        val outputShape = tflite.getOutputTensor(0).shape();
+        val outputDataType = tflite.getOutputTensor(0).dataType();
+
+        val csvData = readCSVData("/Users/oathompsonjones/Documents/Edinburgh/Year-4/PDIoTS/pdiotapp/app/src/main/java/com/specknet/pdiotapp/trainingdata/PDIoT2324/Respeck/ascending_stairs.csv")
+        val inputArray = arrayOf(csvData);
+
+        val outputArray = Array(1) { FloatArray(7) }
+
+        tflite.run(inputArray, outputArray)
+
+        val predictedClass = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
+        outputView.text = mapOf(
+            0 to "ascending_stairs",
+            1 to "shuffle_walking",
+            2 to "sitting_standing",
+            3 to "misc_movement",
+            4 to "normal_walking",
+            5 to "lying_down",
+            6 to "descending_stairs"
+        )[predictedClass]
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -256,5 +306,6 @@ class LiveDataActivity : AppCompatActivity() {
         unregisterReceiver(thingyLiveUpdateReceiver)
         looperRespeck.quit()
         looperThingy.quit()
+        tflite.close()
     }
 }
