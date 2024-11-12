@@ -4,13 +4,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Log
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.data.Entry
@@ -24,8 +24,6 @@ import com.specknet.pdiotapp.utils.ThingyLiveData
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.channels.FileChannel
-import kotlin.collections.ArrayList
-import org.json.JSONArray
 
 
 class LiveDataActivity : AppCompatActivity() {
@@ -60,6 +58,9 @@ class LiveDataActivity : AppCompatActivity() {
     private val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
     private val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
 
+    private val respeckFrames: ArrayList<FloatArray> = ArrayList()
+    private val thingyFrames: ArrayList<FloatArray> = ArrayList()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
@@ -71,15 +72,12 @@ class LiveDataActivity : AppCompatActivity() {
         // set up the broadcast receiver
         respeckLiveUpdateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-
                 Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
 
                 val action = intent.action
 
                 if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
-
-                    val liveData =
-                        intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
+                    val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
                     Log.d("Live", "onReceive: liveData = " + liveData)
 
                     // get all relevant intent contents
@@ -90,6 +88,15 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("respeck", x, y, z, "Ascending")
 
+//                    respeckFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
+//                    if (respeckFrames.size > 50) {
+//                        respeckFrames.removeAt(0)
+//                        updateClassificationOutput(classify(respeckFrames.toTypedArray()))
+//                        val predication = classify(respeckFrames.toTypedArray())
+//                        runOnUiThread {
+//                            updateClassificationOutput(predication)
+//                        }
+//                    }
                 }
             }
         }
@@ -104,15 +111,12 @@ class LiveDataActivity : AppCompatActivity() {
         // set up the broadcast receiver
         thingyLiveUpdateReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-
                 Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
 
                 val action = intent.action
 
                 if (action == Constants.ACTION_THINGY_BROADCAST) {
-
-                    val liveData =
-                        intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
+                    val liveData = intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
                     Log.d("Live", "onReceive: liveData = " + liveData)
 
                     // get all relevant intent contents
@@ -123,6 +127,14 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("thingy", x, y, z, "Ascending")
 
+                    thingyFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
+                    if (thingyFrames.size > 50) {
+                        thingyFrames.removeAt(0)
+                        val predication = classify(thingyFrames.toTypedArray())
+                        runOnUiThread {
+                            updateClassificationOutput(predication)
+                        }
+                    }
                 }
             }
         }
@@ -133,17 +145,6 @@ class LiveDataActivity : AppCompatActivity() {
         looperThingy = handlerThreadThingy.looper
         val handlerThingy = Handler(looperThingy)
         this.registerReceiver(thingyLiveUpdateReceiver, filterTestThingy, null, handlerThingy)
-
-        val jsonData = assets.open("ascending_stairs.json").bufferedReader().use { it.readText() }
-        fun parseJsonToFloatArray(json: String): Array<FloatArray> {
-            val jsonArray = JSONArray(json)
-            return Array(jsonArray.length()) { i ->
-                val innerArray = jsonArray.getJSONArray(i)
-                FloatArray(innerArray.length()) { j -> innerArray.getDouble(j).toFloat() }
-            }
-        }
-        val prediction = classify(parseJsonToFloatArray(jsonData))
-        updateClassificationOutput(prediction)
     }
 
     private fun setupCharts() {
@@ -258,9 +259,9 @@ class LiveDataActivity : AppCompatActivity() {
 
     private fun updateClassificationOutput(predication: Int?) {
         outputView.text = buildString {
-            append("Classification: ")
-            append(predication)
-            append(" - ")
+            append("Activity Classification: ")
+//            append(predication.toString())
+//            append(" - ")
             append(listOf(
                 "Respeck/DailyActivities/ascending",
                 "Respeck/DailyActivities/descending",
