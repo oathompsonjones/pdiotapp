@@ -25,7 +25,6 @@ import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.channels.FileChannel
 import kotlin.collections.ArrayList
-import com.opencsv.CSVReader
 import org.json.JSONArray
 
 
@@ -135,6 +134,16 @@ class LiveDataActivity : AppCompatActivity() {
         val handlerThingy = Handler(looperThingy)
         this.registerReceiver(thingyLiveUpdateReceiver, filterTestThingy, null, handlerThingy)
 
+        val jsonData = assets.open("ascending_stairs.json").bufferedReader().use { it.readText() }
+        fun parseJsonToFloatArray(json: String): Array<FloatArray> {
+            val jsonArray = JSONArray(json)
+            return Array(jsonArray.length()) { i ->
+                val innerArray = jsonArray.getJSONArray(i)
+                FloatArray(innerArray.length()) { j -> innerArray.getDouble(j).toFloat() }
+            }
+        }
+        val prediction = classify(parseJsonToFloatArray(jsonData))
+        updateClassificationOutput(prediction)
     }
 
     fun setupCharts() {
@@ -144,36 +153,21 @@ class LiveDataActivity : AppCompatActivity() {
         // Respeck
 
         time = 0f
-        val entries_res_accel_x = ArrayList<Entry>()
-        val entries_res_accel_y = ArrayList<Entry>()
-        val entries_res_accel_z = ArrayList<Entry>()
+        val entriesResAccelX = ArrayList<Entry>()
+        val entriesResAccelY = ArrayList<Entry>()
+        val entriesResAccelZ = ArrayList<Entry>()
 
-        dataSet_res_accel_x = LineDataSet(entries_res_accel_x, "Accel X")
-        dataSet_res_accel_y = LineDataSet(entries_res_accel_y, "Accel Y")
-        dataSet_res_accel_z = LineDataSet(entries_res_accel_z, "Accel Z")
+        dataSet_res_accel_x = LineDataSet(entriesResAccelX, "Accel X")
+        dataSet_res_accel_y = LineDataSet(entriesResAccelY, "Accel Y")
+        dataSet_res_accel_z = LineDataSet(entriesResAccelZ, "Accel Z")
 
         dataSet_res_accel_x.setDrawCircles(false)
         dataSet_res_accel_y.setDrawCircles(false)
         dataSet_res_accel_z.setDrawCircles(false)
 
-        dataSet_res_accel_x.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.red
-            )
-        )
-        dataSet_res_accel_y.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.green
-            )
-        )
-        dataSet_res_accel_z.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.blue
-            )
-        )
+        dataSet_res_accel_x.setColor(ContextCompat.getColor(this, R.color.red))
+        dataSet_res_accel_y.setColor(ContextCompat.getColor(this, R.color.green))
+        dataSet_res_accel_z.setColor(ContextCompat.getColor(this, R.color.blue))
 
         val dataSetsRes = ArrayList<ILineDataSet>()
         dataSetsRes.add(dataSet_res_accel_x)
@@ -187,36 +181,21 @@ class LiveDataActivity : AppCompatActivity() {
         // Thingy
 
         time = 0f
-        val entries_thingy_accel_x = ArrayList<Entry>()
-        val entries_thingy_accel_y = ArrayList<Entry>()
-        val entries_thingy_accel_z = ArrayList<Entry>()
+        val entriesThingyAccelX = ArrayList<Entry>()
+        val entriesThingyAccelY = ArrayList<Entry>()
+        val entriesThingyAccelZ = ArrayList<Entry>()
 
-        dataSet_thingy_accel_x = LineDataSet(entries_thingy_accel_x, "Accel X")
-        dataSet_thingy_accel_y = LineDataSet(entries_thingy_accel_y, "Accel Y")
-        dataSet_thingy_accel_z = LineDataSet(entries_thingy_accel_z, "Accel Z")
+        dataSet_thingy_accel_x = LineDataSet(entriesThingyAccelX, "Accel X")
+        dataSet_thingy_accel_y = LineDataSet(entriesThingyAccelY, "Accel Y")
+        dataSet_thingy_accel_z = LineDataSet(entriesThingyAccelZ, "Accel Z")
 
         dataSet_thingy_accel_x.setDrawCircles(false)
         dataSet_thingy_accel_y.setDrawCircles(false)
         dataSet_thingy_accel_z.setDrawCircles(false)
 
-        dataSet_thingy_accel_x.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.red
-            )
-        )
-        dataSet_thingy_accel_y.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.green
-            )
-        )
-        dataSet_thingy_accel_z.setColor(
-            ContextCompat.getColor(
-                this,
-                R.color.blue
-            )
-        )
+        dataSet_thingy_accel_x.setColor(ContextCompat.getColor(this, R.color.red))
+        dataSet_thingy_accel_y.setColor(ContextCompat.getColor(this, R.color.green))
+        dataSet_thingy_accel_z.setColor(ContextCompat.getColor(this, R.color.blue))
 
         val dataSetsThingy = ArrayList<ILineDataSet>()
         dataSetsThingy.add(dataSet_thingy_accel_x)
@@ -266,37 +245,22 @@ class LiveDataActivity : AppCompatActivity() {
         val file = assets.openFd("model.tflite")
         tflite = Interpreter(FileInputStream(file.fileDescriptor).channel
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
+    }
 
-        val inputShape = tflite.getInputTensor(0).shape()
-        val inputDataType = tflite.getInputTensor(0).dataType()
-
-        val outputShape = tflite.getOutputTensor(0).shape()
-        val outputDataType = tflite.getOutputTensor(0).dataType()
-
-        Log.d("TensorFlow Lite", "Input Shape: ${inputShape.contentToString()}, Data Type: $inputDataType");
-        Log.d("TensorFlow Lite", "Output Shape: ${outputShape.contentToString()}, Data Type: $outputDataType")
-
-        val jsonData = assets.open("ascending_stairs.json").bufferedReader().use { it.readText() }
-        Log.d("test", jsonData)
-        fun parseJsonToFloatArray(json: String): Array<FloatArray> {
-            val jsonArray = JSONArray(json)
-            return Array(jsonArray.length()) { i ->
-                val innerArray = jsonArray.getJSONArray(i)
-                FloatArray(innerArray.length()) { j -> innerArray.getDouble(j).toFloat() }
-            }
-        }
-
-        val inputArray = arrayOf(parseJsonToFloatArray(jsonData))
+    fun classify(data: Array<FloatArray>): Int? {
+        val inputArray = arrayOf(data)
         val outputArray = Array(1) { FloatArray(26) }
-        Log.d("TensorFlow Lite", "Input Shape: ${inputArray[0][0].contentToString()}, Data Type: $inputDataType")
 
         tflite.run(inputArray, outputArray)
 
-        val predictedClass = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
-        Log.d("TensorFlow Lite", "Predicted Class: $predictedClass")
+        return outputArray[0].indices.maxByOrNull { outputArray[0][it] }
+    }
+
+    fun updateClassificationOutput(predication: Int?) {
         outputView.text = buildString {
             append("Classification: ")
-            append(predictedClass)
+            append(predication)
+            append(" - ")
             append(listOf(
                 "Respeck/DailyActivities/ascending",
                 "Respeck/DailyActivities/descending",
@@ -324,7 +288,8 @@ class LiveDataActivity : AppCompatActivity() {
                 "Thingy/running",
                 "Thingy/shuffleWalking",
                 "Thingy/sittingStanding",
-            )[predictedClass ?: 0])
+                "FAIL"
+            )[predication ?: 26])
         }
     }
 
