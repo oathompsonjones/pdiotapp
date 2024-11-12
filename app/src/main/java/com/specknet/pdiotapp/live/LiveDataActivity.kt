@@ -31,34 +31,34 @@ import org.json.JSONArray
 class LiveDataActivity : AppCompatActivity() {
 
     // global graph variables
-    lateinit var dataSet_res_accel_x: LineDataSet
-    lateinit var dataSet_res_accel_y: LineDataSet
-    lateinit var dataSet_res_accel_z: LineDataSet
+    private lateinit var datasetResAccelX: LineDataSet
+    private lateinit var datasetResAccelY: LineDataSet
+    private lateinit var datasetResAccelZ: LineDataSet
 
-    lateinit var dataSet_thingy_accel_x: LineDataSet
-    lateinit var dataSet_thingy_accel_y: LineDataSet
-    lateinit var dataSet_thingy_accel_z: LineDataSet
+    private lateinit var datasetThingyAccelX: LineDataSet
+    private lateinit var datasetThingyAccelY: LineDataSet
+    private lateinit var datasetThingyAccelZ: LineDataSet
 
     var time = 0f
-    lateinit var allRespeckData: LineData
+    private lateinit var allRespeckData: LineData
 
-    lateinit var allThingyData: LineData
+    private lateinit var allThingyData: LineData
 
-    lateinit var respeckChart: LineChart
-    lateinit var thingyChart: LineChart
+    private lateinit var respeckChart: LineChart
+    private lateinit var thingyChart: LineChart
 
     // global broadcast receiver so we can unregister it
-    lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
-    lateinit var thingyLiveUpdateReceiver: BroadcastReceiver
-    lateinit var looperRespeck: Looper
-    lateinit var looperThingy: Looper
+    private lateinit var respeckLiveUpdateReceiver: BroadcastReceiver
+    private lateinit var thingyLiveUpdateReceiver: BroadcastReceiver
+    private lateinit var looperRespeck: Looper
+    private lateinit var looperThingy: Looper
 
     // classification variables
-    lateinit var outputView: TextView
-    lateinit var tflite: Interpreter
+    private lateinit var outputView: TextView
+    private lateinit var tflite: Interpreter
 
-    val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
-    val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
+    private val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
+    private val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,7 +146,7 @@ class LiveDataActivity : AppCompatActivity() {
         updateClassificationOutput(prediction)
     }
 
-    fun setupCharts() {
+    private fun setupCharts() {
         respeckChart = findViewById(R.id.respeck_chart)
         thingyChart = findViewById(R.id.thingy_chart)
 
@@ -157,22 +157,22 @@ class LiveDataActivity : AppCompatActivity() {
         val entriesResAccelY = ArrayList<Entry>()
         val entriesResAccelZ = ArrayList<Entry>()
 
-        dataSet_res_accel_x = LineDataSet(entriesResAccelX, "Accel X")
-        dataSet_res_accel_y = LineDataSet(entriesResAccelY, "Accel Y")
-        dataSet_res_accel_z = LineDataSet(entriesResAccelZ, "Accel Z")
+        datasetResAccelX = LineDataSet(entriesResAccelX, "Accel X")
+        datasetResAccelY = LineDataSet(entriesResAccelY, "Accel Y")
+        datasetResAccelZ = LineDataSet(entriesResAccelZ, "Accel Z")
 
-        dataSet_res_accel_x.setDrawCircles(false)
-        dataSet_res_accel_y.setDrawCircles(false)
-        dataSet_res_accel_z.setDrawCircles(false)
+        datasetResAccelX.setDrawCircles(false)
+        datasetResAccelY.setDrawCircles(false)
+        datasetResAccelZ.setDrawCircles(false)
 
-        dataSet_res_accel_x.setColor(ContextCompat.getColor(this, R.color.red))
-        dataSet_res_accel_y.setColor(ContextCompat.getColor(this, R.color.green))
-        dataSet_res_accel_z.setColor(ContextCompat.getColor(this, R.color.blue))
+        datasetResAccelX.setColor(ContextCompat.getColor(this, R.color.red))
+        datasetResAccelY.setColor(ContextCompat.getColor(this, R.color.green))
+        datasetResAccelZ.setColor(ContextCompat.getColor(this, R.color.blue))
 
         val dataSetsRes = ArrayList<ILineDataSet>()
-        dataSetsRes.add(dataSet_res_accel_x)
-        dataSetsRes.add(dataSet_res_accel_y)
-        dataSetsRes.add(dataSet_res_accel_z)
+        dataSetsRes.add(datasetResAccelX)
+        dataSetsRes.add(datasetResAccelY)
+        dataSetsRes.add(datasetResAccelZ)
 
         allRespeckData = LineData(dataSetsRes)
         respeckChart.data = allRespeckData
@@ -185,22 +185,22 @@ class LiveDataActivity : AppCompatActivity() {
         val entriesThingyAccelY = ArrayList<Entry>()
         val entriesThingyAccelZ = ArrayList<Entry>()
 
-        dataSet_thingy_accel_x = LineDataSet(entriesThingyAccelX, "Accel X")
-        dataSet_thingy_accel_y = LineDataSet(entriesThingyAccelY, "Accel Y")
-        dataSet_thingy_accel_z = LineDataSet(entriesThingyAccelZ, "Accel Z")
+        datasetThingyAccelX = LineDataSet(entriesThingyAccelX, "Accel X")
+        datasetThingyAccelY = LineDataSet(entriesThingyAccelY, "Accel Y")
+        datasetThingyAccelZ = LineDataSet(entriesThingyAccelZ, "Accel Z")
 
-        dataSet_thingy_accel_x.setDrawCircles(false)
-        dataSet_thingy_accel_y.setDrawCircles(false)
-        dataSet_thingy_accel_z.setDrawCircles(false)
+        datasetThingyAccelX.setDrawCircles(false)
+        datasetThingyAccelY.setDrawCircles(false)
+        datasetThingyAccelZ.setDrawCircles(false)
 
-        dataSet_thingy_accel_x.setColor(ContextCompat.getColor(this, R.color.red))
-        dataSet_thingy_accel_y.setColor(ContextCompat.getColor(this, R.color.green))
-        dataSet_thingy_accel_z.setColor(ContextCompat.getColor(this, R.color.blue))
+        datasetThingyAccelX.setColor(ContextCompat.getColor(this, R.color.red))
+        datasetThingyAccelY.setColor(ContextCompat.getColor(this, R.color.green))
+        datasetThingyAccelZ.setColor(ContextCompat.getColor(this, R.color.blue))
 
         val dataSetsThingy = ArrayList<ILineDataSet>()
-        dataSetsThingy.add(dataSet_thingy_accel_x)
-        dataSetsThingy.add(dataSet_thingy_accel_y)
-        dataSetsThingy.add(dataSet_thingy_accel_z)
+        dataSetsThingy.add(datasetThingyAccelX)
+        dataSetsThingy.add(datasetThingyAccelY)
+        dataSetsThingy.add(datasetThingyAccelZ)
 
         allThingyData = LineData(dataSetsThingy)
         thingyChart.data = allThingyData
@@ -211,9 +211,9 @@ class LiveDataActivity : AppCompatActivity() {
         // take the first element from the queue
         // and update the graph with it
         if (graph == "respeck") {
-            dataSet_res_accel_x.addEntry(Entry(time, x))
-            dataSet_res_accel_y.addEntry(Entry(time, y))
-            dataSet_res_accel_z.addEntry(Entry(time, z))
+            datasetResAccelX.addEntry(Entry(time, x))
+            datasetResAccelY.addEntry(Entry(time, y))
+            datasetResAccelZ.addEntry(Entry(time, z))
 
             runOnUiThread {
                 allRespeckData.notifyDataChanged()
@@ -223,9 +223,9 @@ class LiveDataActivity : AppCompatActivity() {
                 respeckChart.moveViewToX(respeckChart.lowestVisibleX + 40)
             }
         } else if (graph == "thingy") {
-            dataSet_thingy_accel_x.addEntry(Entry(time, x))
-            dataSet_thingy_accel_y.addEntry(Entry(time, y))
-            dataSet_thingy_accel_z.addEntry(Entry(time, z))
+            datasetThingyAccelX.addEntry(Entry(time, x))
+            datasetThingyAccelY.addEntry(Entry(time, y))
+            datasetThingyAccelZ.addEntry(Entry(time, z))
 
             runOnUiThread {
                 allThingyData.notifyDataChanged()
@@ -239,7 +239,7 @@ class LiveDataActivity : AppCompatActivity() {
 
     }
 
-    fun setupClassification() {
+    private fun setupClassification() {
         outputView = findViewById(R.id.ActivityClassification)
 
         val file = assets.openFd("model.tflite")
@@ -247,7 +247,7 @@ class LiveDataActivity : AppCompatActivity() {
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
     }
 
-    fun classify(data: Array<FloatArray>): Int? {
+    private fun classify(data: Array<FloatArray>): Int? {
         val inputArray = arrayOf(data)
         val outputArray = Array(1) { FloatArray(26) }
 
@@ -256,7 +256,7 @@ class LiveDataActivity : AppCompatActivity() {
         return outputArray[0].indices.maxByOrNull { outputArray[0][it] }
     }
 
-    fun updateClassificationOutput(predication: Int?) {
+    private fun updateClassificationOutput(predication: Int?) {
         outputView.text = buildString {
             append("Classification: ")
             append(predication)
