@@ -26,6 +26,7 @@ import java.io.FileInputStream
 import java.nio.channels.FileChannel
 import kotlin.collections.ArrayList
 import com.opencsv.CSVReader
+import org.json.JSONArray
 
 
 class LiveDataActivity : AppCompatActivity() {
@@ -259,45 +260,72 @@ class LiveDataActivity : AppCompatActivity() {
 
     }
 
-    fun readCSVData(filename: String): List<FloatArray> {
-        val reader = CSVReader(assets.open(filename).reader())
-        val data = mutableListOf<FloatArray>()
-        var nextLine = reader.readNext()
-        while (nextLine != null) {
-            data.add(nextLine.map { it.toFloat() }.toFloatArray())
-            nextLine = reader.readNext()
-        }
-        return data
-    }
-
     fun setupClassification() {
+        outputView = findViewById(R.id.ActivityClassification)
+
         val file = assets.openFd("model.tflite")
         tflite = Interpreter(FileInputStream(file.fileDescriptor).channel
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
 
-        val inputShape = tflite.getInputTensor(0).shape();
-        val inputDataType = tflite.getInputTensor(0).dataType();
+        val inputShape = tflite.getInputTensor(0).shape()
+        val inputDataType = tflite.getInputTensor(0).dataType()
 
-        val outputShape = tflite.getOutputTensor(0).shape();
-        val outputDataType = tflite.getOutputTensor(0).dataType();
+        val outputShape = tflite.getOutputTensor(0).shape()
+        val outputDataType = tflite.getOutputTensor(0).dataType()
 
-        val csvData = readCSVData("/Users/oathompsonjones/Documents/Edinburgh/Year-4/PDIoTS/pdiotapp/app/src/main/java/com/specknet/pdiotapp/trainingdata/PDIoT2324/Respeck/ascending_stairs.csv")
-        val inputArray = arrayOf(csvData);
+        Log.d("TensorFlow Lite", "Input Shape: ${inputShape.contentToString()}, Data Type: $inputDataType");
+        Log.d("TensorFlow Lite", "Output Shape: ${outputShape.contentToString()}, Data Type: $outputDataType")
 
-        val outputArray = Array(1) { FloatArray(7) }
+        val jsonData = assets.open("ascending_stairs.json").bufferedReader().use { it.readText() }
+        Log.d("test", jsonData)
+        fun parseJsonToFloatArray(json: String): Array<FloatArray> {
+            val jsonArray = JSONArray(json)
+            return Array(jsonArray.length()) { i ->
+                val innerArray = jsonArray.getJSONArray(i)
+                FloatArray(innerArray.length()) { j -> innerArray.getDouble(j).toFloat() }
+            }
+        }
+
+        val inputArray = arrayOf(parseJsonToFloatArray(jsonData))
+        val outputArray = Array(1) { FloatArray(26) }
+        Log.d("TensorFlow Lite", "Input Shape: ${inputArray[0][0].contentToString()}, Data Type: $inputDataType")
 
         tflite.run(inputArray, outputArray)
 
         val predictedClass = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
-        outputView.text = mapOf(
-            0 to "ascending_stairs",
-            1 to "shuffle_walking",
-            2 to "sitting_standing",
-            3 to "misc_movement",
-            4 to "normal_walking",
-            5 to "lying_down",
-            6 to "descending_stairs"
-        )[predictedClass]
+        Log.d("TensorFlow Lite", "Predicted Class: $predictedClass")
+        outputView.text = buildString {
+            append("Classification: ")
+            append(predictedClass)
+            append(listOf(
+                "Respeck/DailyActivities/ascending",
+                "Respeck/DailyActivities/descending",
+                "Respeck/DailyActivities/lyingBack",
+                "Respeck/DailyActivities/lyingLeft",
+                "Respeck/DailyActivities/lyingRight",
+                "Respeck/DailyActivities/lyingStomach",
+                "Respeck/DailyActivities/miscMovement",
+                "Respeck/DailyActivities/normalWalking",
+                "Respeck/DailyActivities/running",
+                "Respeck/DailyActivities/shuffleWalking",
+                "Respeck/DailyActivities/sittingStanding",
+                "Respeck/Respiratory/breathingNormally",
+                "Respeck/Respiratory/coughing",
+                "Respeck/Respiratory/hyperventilation",
+                "Respeck/Respiratory/other",
+                "Thingy/ascending",
+                "Thingy/descending",
+                "Thingy/lyingBack",
+                "Thingy/lyingLeft",
+                "Thingy/lyingRight",
+                "Thingy/lyingStomach",
+                "Thingy/miscMovement",
+                "Thingy/normalWalking",
+                "Thingy/running",
+                "Thingy/shuffleWalking",
+                "Thingy/sittingStanding",
+            )[predictedClass ?: 0])
+        }
     }
 
     override fun onDestroy() {
