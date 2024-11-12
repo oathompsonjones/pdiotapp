@@ -10,7 +10,7 @@
         android:id="@+id/ActivityClassification"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Activity Classification: Breathing Normally" />
+        android:text="Activity Classification: " />
 
     <LinearLayout
         android:layout_width="match_parent"
