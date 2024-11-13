@@ -88,15 +88,18 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("respeck", x, y, z, "Ascending")
 
-//                    respeckFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
-//                    if (respeckFrames.size > 50) {
-//                        respeckFrames.removeAt(0)
-//                        updateClassificationOutput(classify(respeckFrames.toTypedArray()))
-//                        val predication = classify(respeckFrames.toTypedArray())
-//                        runOnUiThread {
-//                            updateClassificationOutput(predication)
-//                        }
-//                    }
+                    respeckFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
+                    if (respeckFrames.size > 50) {
+                        respeckFrames.removeAt(0)
+
+                        val predication = classify(respeckFrames.toTypedArray())
+                        if (predication != null) {
+                            runOnUiThread {
+                                updateClassificationOutput(predication)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -131,8 +134,12 @@ class LiveDataActivity : AppCompatActivity() {
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
                         val predication = classify(thingyFrames.toTypedArray())
-                        runOnUiThread {
-                            updateClassificationOutput(predication)
+                        if (predication != null) {
+                            if (predication > 11 && predication < 26) {
+                                runOnUiThread {
+                                    updateClassificationOutput(predication)
+                                }
+                            }
                         }
                     }
                 }
@@ -248,16 +255,26 @@ class LiveDataActivity : AppCompatActivity() {
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
     }
 
-    private fun classify(data: Array<FloatArray>): Int? {
+    private val respiratoryIndices = listOf(11, 12, 13, 14)
+
+    private fun classify(data: Array<FloatArray>): Pair<Int?, Int?>{
         val inputArray = arrayOf(data)
         val outputArray = Array(1) { FloatArray(26) }
 
         tflite.run(inputArray, outputArray)
 
-        return outputArray[0].indices.maxByOrNull { outputArray[0][it] }
+        val highestOverall = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
+
+        // Find the index of the highest respiratory prediction
+        val highestRespiratory = respiratoryIndices.maxByOrNull { outputArray[0][it] }
+
+        // Return both indices as a Pair
+        return Pair(highestOverall, highestRespiratory)
+
     }
 
-    private fun updateClassificationOutput(predication: Int?) {
+
+    private fun updateClassificationOutput(predication: Pair<Int?, Int?> ) {
         outputView.text = buildString {
             append("Activity Classification: ")
 //            append(predication.toString())
