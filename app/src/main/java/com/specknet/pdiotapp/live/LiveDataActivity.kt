@@ -52,8 +52,11 @@ class LiveDataActivity : AppCompatActivity() {
     private lateinit var looperThingy: Looper
 
     // classification variables
-    private lateinit var outputView: TextView
-    private lateinit var tflite: Interpreter
+    private lateinit var avtivityClassificationView: TextView
+    private lateinit var breathingClassificationView: TextView
+    private lateinit var tfliteRespeckBreathing: Interpreter
+    private lateinit var tfliteRespeckActivities: Interpreter
+    private lateinit var tfliteThingyActivities: Interpreter
 
     private val filterTestRespeck = IntentFilter(Constants.ACTION_RESPECK_LIVE_BROADCAST)
     private val filterTestThingy = IntentFilter(Constants.ACTION_THINGY_BROADCAST)
@@ -64,8 +67,9 @@ class LiveDataActivity : AppCompatActivity() {
     private val predicationThingy: FloatArray = FloatArray(26)
     private val predicationRespeck: FloatArray = FloatArray(26)
 
-    private var respeckOutputNumber: Int? = null
-    private var thingyOutputNumber: Int? = null
+    private var respeckBreathingOutput: Int? = null
+    private var respeckActivitiesOutput: Int? = null
+    private var thingyActivitiesOutput: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,7 +88,7 @@ class LiveDataActivity : AppCompatActivity() {
 
                 if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
                     val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
-                    Log.d("Live", "onReceive: liveData = " + liveData)
+                    Log.d("Live", "onReceive: liveData = $liveData")
 
                     // get all relevant intent contents
                     val x = liveData.accelX
@@ -98,14 +102,11 @@ class LiveDataActivity : AppCompatActivity() {
                     if (respeckFrames.size > 50) {
                         respeckFrames.removeAt(0)
 
-                        val predicationRespeck = classify(respeckFrames.toTypedArray(), "Respeck")
-//                        if (predication != null) {
-//                            if (predication < 15) {
-//                                runOnUiThread {
-//                                    updateClassificationOutput(predication)
-//                                }
-//                            }
-//                        }
+                        classify(respeckFrames.toTypedArray(), Model.RESPECK_BREATHING)
+                        classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
+                      runOnUiThread {
+                          updateBreathingClassificationOutput(respeckBreathingOutput)
+                      }
                     }
                 }
             }
@@ -128,7 +129,7 @@ class LiveDataActivity : AppCompatActivity() {
                 if (action == Constants.ACTION_THINGY_BROADCAST) {
                     val liveData =
                         intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
-                    Log.d("Live", "onReceive: liveData = " + liveData)
+                    Log.d("Live", "onReceive: liveData = $liveData")
 
                     // get all relevant intent contents
                     val x = liveData.accelX
@@ -138,32 +139,17 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("thingy", x, y, z, "Ascending")
 
-                    thingyFrames.add(
-                        floatArrayOf(
-                            liveData.accelX,
-                            liveData.accelY,
-                            liveData.accelZ,
-                            liveData.gyro.x,
-                            liveData.gyro.y,
-                            liveData.gyro.z
-                        )
-                    )
+                    thingyFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
-
-                        val predicationThingy = classify(thingyFrames.toTypedArray(), "Thingy")
-
-//                        runOnUiThread {
-//                            updateClassificationOutput(predicationThingy)
-//                        }
+                        classify(thingyFrames.toTypedArray(), Model.THINGY_ACTIVITIES)
                     }
                 }
 
             }
         }
 
-        compareModels(predicationThingy, predicationRespeck)
-
+        compareActivityModels(predicationThingy, predicationRespeck)
 
         // register receiver on another thread
         val handlerThreadThingy = HandlerThread("bgThreadThingyLive")
@@ -267,39 +253,52 @@ class LiveDataActivity : AppCompatActivity() {
     }
 
     private fun setupClassification() {
-        outputView = findViewById(R.id.ActivityClassification)
+        avtivityClassificationView = findViewById(R.id.ActivityClassification)
+        breathingClassificationView = findViewById(R.id.BreathingClassification)
 
-        val file = assets.openFd("model.tflite")
-        tflite = Interpreter(FileInputStream(file.fileDescriptor).channel
+        var file = assets.openFd("respeck-breathing_128-16.tflite")
+        tfliteRespeckBreathing = Interpreter(FileInputStream(file.fileDescriptor).channel
+            .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
+
+        file = assets.openFd("respeck-activities_128-16.tflite")
+        tfliteRespeckActivities = Interpreter(FileInputStream(file.fileDescriptor).channel
+            .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
+
+        file = assets.openFd("thingy_128-16.tflite")
+        tfliteThingyActivities = Interpreter(FileInputStream(file.fileDescriptor).channel
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
     }
 
-    private val respiratoryIndices = listOf(11, 12, 13, 14)
-
-    private fun classify(data: Array<FloatArray>, respeckOrThingy: String): Float? {
+    private fun classify(data: Array<FloatArray>, model: Model) {
         val inputArray = arrayOf(data)
         val outputArray = Array(1) { FloatArray(26) }
 
-        tflite.run(inputArray, outputArray)
-
-        if (respeckOrThingy == "Respeck") {
-            respeckOutputNumber = outputArray.indices.maxByOrNull { it }
-        } else {
-            thingyOutputNumber = outputArray.indices.maxByOrNull { it }
+        when (model) {
+            Model.RESPECK_BREATHING -> {
+//                tfliteRespeckBreathing.run(inputArray, outputArray)
+                respeckBreathingOutput = outputArray.indices.maxByOrNull { it }
+                Log.d("FUCK respeck breathing", respeckBreathingOutput.toString())
+            }
+            Model.RESPECK_ACTIVITIES -> {
+//                tfliteRespeckActivities.run(inputArray, outputArray)
+                respeckActivitiesOutput = outputArray.indices.maxByOrNull { it }
+                Log.d("FUCK respeck activities", respeckActivitiesOutput.toString())
+            }
+            Model.THINGY_ACTIVITIES -> {
+//                tfliteThingyActivities.run(inputArray, outputArray)
+                thingyActivitiesOutput = outputArray.indices.maxByOrNull { it }
+                Log.d("FUCK thingy activities", thingyActivitiesOutput.toString())
+            }
         }
 
         Log.d("Classification" , "classify: ${outputArray[0].maxByOrNull { it } }")
         Log.d("Classification" , "classify: ${outputArray.indices.maxByOrNull { it }}")
-
-        return outputArray[0].maxByOrNull { it }
     }
 
 
-    private fun updateClassificationOutput(predication: Int?) {
-        outputView.text = buildString {
+    private fun updateActivityClassificationOutput(predication: Int?) {
+        avtivityClassificationView.text = buildString {
             append("Activity Classification: ")
-//            append(predication.toString())
-//            append(" - ")
             append(listOf(
                 "ascending",
                 "descending",
@@ -312,35 +311,39 @@ class LiveDataActivity : AppCompatActivity() {
                 "running",
                 "shuffleWalking",
                 "sittingStanding",
+                "FAIL"
+            )[predication ?: 11])
+        }
+    }
+
+    private fun updateBreathingClassificationOutput(predication: Int?) {
+        breathingClassificationView.text = buildString {
+            append("Breathing Classification: ")
+            append(listOf(
                 "breathingNormally",
-                "oughing",
+                "coughing",
                 "hyperventilation",
                 "other",
-                "ascending",
-                "descending",
-                "lyingBack",
-                "lyingLeft",
-                "lyingRight",
-                "lyingStomach",
-                "miscMovement",
-                "normalWalking",
-                "running",
-                "shuffleWalking",
-                "sittingStanding",
                 "FAIL"
-            )[predication ?: 26])
+            )[predication ?: 4])
         }
     }
 
 
-    private fun compareModels(predicationThingy: FloatArray, predicationRespeck: FloatArray) {
+    private fun compareActivityModels(predicationThingy: FloatArray, predicationRespeck: FloatArray) {
+        Log.d("FUCK compare 1", predicationThingy.contentToString())
+        Log.d("FUCK compare 1.1", predicationThingy.maxOrNull().toString())
+        Log.d("FUCK compare 1.2", thingyActivitiesOutput.toString())
+        Log.d("FUCK compare 2", predicationRespeck.contentToString())
+        Log.d("FUCK compare 2.1", predicationRespeck.maxOrNull().toString())
+        Log.d("FUCK compare 2.2", respeckActivitiesOutput.toString())
         if ((predicationThingy.maxOrNull() ?: 0f) >= (predicationRespeck.maxOrNull() ?: 0f)) {
             runOnUiThread {
-                updateClassificationOutput(thingyOutputNumber)
+                updateActivityClassificationOutput(thingyActivitiesOutput)
             }
         } else {
             runOnUiThread {
-                updateClassificationOutput(respeckOutputNumber)
+                updateActivityClassificationOutput(respeckActivitiesOutput)
             }
         }
     }
@@ -351,6 +354,14 @@ class LiveDataActivity : AppCompatActivity() {
         unregisterReceiver(thingyLiveUpdateReceiver)
         looperRespeck.quit()
         looperThingy.quit()
-        tflite.close()
+        tfliteRespeckBreathing.close()
+        tfliteRespeckActivities.close()
+        tfliteThingyActivities.close()
+    }
+
+    private enum class Model {
+        RESPECK_BREATHING,
+        RESPECK_ACTIVITIES,
+        THINGY_ACTIVITIES
     }
 }
