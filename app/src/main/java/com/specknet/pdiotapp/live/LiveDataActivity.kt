@@ -64,12 +64,12 @@ class LiveDataActivity : AppCompatActivity() {
     private val respeckFrames: ArrayList<FloatArray> = ArrayList()
     private val thingyFrames: ArrayList<FloatArray> = ArrayList()
 
-    private val predicationThingy: FloatArray = FloatArray(26)
-    private val predicationRespeck: FloatArray = FloatArray(26)
+    private var predicationThingy: Float? = null
+    private var predicationRespeck: Float? = null
 
-    private var respeckBreathingOutput: Int? = null
-    private var respeckActivitiesOutput: Int? = null
-    private var thingyActivitiesOutput: Int? = null
+    private var respeckBreathingOutputIndex: Int? = null
+    private var respeckActivitiesOutputIndex: Int? = null
+    private var thingyActivitiesOutputIndex: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,7 +85,6 @@ class LiveDataActivity : AppCompatActivity() {
                 Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
 
                 val action = intent.action
-
                 if (action == Constants.ACTION_RESPECK_LIVE_BROADCAST) {
                     val liveData = intent.getSerializableExtra(Constants.RESPECK_LIVE_DATA) as RESpeckLiveData
                     Log.d("Live", "onReceive: liveData = $liveData")
@@ -103,10 +102,11 @@ class LiveDataActivity : AppCompatActivity() {
                         respeckFrames.removeAt(0)
 
                         classify(respeckFrames.toTypedArray(), Model.RESPECK_BREATHING)
-                        classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
-                      runOnUiThread {
-                          updateBreathingClassificationOutput(respeckBreathingOutput)
-                      }
+                        predicationRespeck = classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
+                        runOnUiThread {
+                            updateBreathingClassificationOutput(respeckBreathingOutputIndex)
+                        }
+                        compareActivityModels(predicationThingy, predicationRespeck)
                     }
                 }
             }
@@ -125,10 +125,8 @@ class LiveDataActivity : AppCompatActivity() {
                 Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
 
                 val action = intent.action
-
                 if (action == Constants.ACTION_THINGY_BROADCAST) {
-                    val liveData =
-                        intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
+                    val liveData = intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
                     Log.d("Live", "onReceive: liveData = $liveData")
 
                     // get all relevant intent contents
@@ -142,14 +140,12 @@ class LiveDataActivity : AppCompatActivity() {
                     thingyFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
-                        classify(thingyFrames.toTypedArray(), Model.THINGY_ACTIVITIES)
+                        predicationThingy = classify(thingyFrames.toTypedArray(), Model.THINGY_ACTIVITIES)
                     }
                 }
 
             }
         }
-
-        compareActivityModels(predicationThingy, predicationRespeck)
 
         // register receiver on another thread
         val handlerThreadThingy = HandlerThread("bgThreadThingyLive")
@@ -269,30 +265,34 @@ class LiveDataActivity : AppCompatActivity() {
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
     }
 
-    private fun classify(data: Array<FloatArray>, model: Model) {
+    private fun classify(data: Array<FloatArray>, model: Model): Float? {
         val inputArray = arrayOf(data)
-        val outputArray = Array(1) { FloatArray(26) }
+        val outputArray: Array<FloatArray>
 
         when (model) {
             Model.RESPECK_BREATHING -> {
-//                tfliteRespeckBreathing.run(inputArray, outputArray)
-                respeckBreathingOutput = outputArray.indices.maxByOrNull { it }
-                Log.d("FUCK respeck breathing", respeckBreathingOutput.toString())
+                outputArray = Array(1) { FloatArray(4) }
+                tfliteRespeckBreathing.run(inputArray, outputArray)
+                respeckBreathingOutputIndex = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
             }
             Model.RESPECK_ACTIVITIES -> {
-//                tfliteRespeckActivities.run(inputArray, outputArray)
-                respeckActivitiesOutput = outputArray.indices.maxByOrNull { it }
-                Log.d("FUCK respeck activities", respeckActivitiesOutput.toString())
+                outputArray = Array(1) { FloatArray(11) }
+                tfliteRespeckActivities.run(inputArray, outputArray)
+                respeckActivitiesOutputIndex = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
             }
             Model.THINGY_ACTIVITIES -> {
-//                tfliteThingyActivities.run(inputArray, outputArray)
-                thingyActivitiesOutput = outputArray.indices.maxByOrNull { it }
-                Log.d("FUCK thingy activities", thingyActivitiesOutput.toString())
+                outputArray = Array(1) { FloatArray(11) }
+                tfliteThingyActivities.run(inputArray, outputArray)
+                thingyActivitiesOutputIndex = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
             }
         }
 
+        Log.d("Classification", model.toString())
+        Log.d("Classification", "classify: ${outputArray[0].contentToString()}")
         Log.d("Classification" , "classify: ${outputArray[0].maxByOrNull { it } }")
-        Log.d("Classification" , "classify: ${outputArray.indices.maxByOrNull { it }}")
+        Log.d("Classification" , "classify: ${outputArray.indices.maxByOrNull { outputArray[0][it] }}")
+
+        return outputArray[0].maxByOrNull { it }
     }
 
 
@@ -330,20 +330,14 @@ class LiveDataActivity : AppCompatActivity() {
     }
 
 
-    private fun compareActivityModels(predicationThingy: FloatArray, predicationRespeck: FloatArray) {
-        Log.d("FUCK compare 1", predicationThingy.contentToString())
-        Log.d("FUCK compare 1.1", predicationThingy.maxOrNull().toString())
-        Log.d("FUCK compare 1.2", thingyActivitiesOutput.toString())
-        Log.d("FUCK compare 2", predicationRespeck.contentToString())
-        Log.d("FUCK compare 2.1", predicationRespeck.maxOrNull().toString())
-        Log.d("FUCK compare 2.2", respeckActivitiesOutput.toString())
-        if ((predicationThingy.maxOrNull() ?: 0f) >= (predicationRespeck.maxOrNull() ?: 0f)) {
+    private fun compareActivityModels(predicationThingy: Float?, predicationRespeck: Float?) {
+        if ((predicationThingy ?: 0f) >= (predicationRespeck ?: 0f)) {
             runOnUiThread {
-                updateActivityClassificationOutput(thingyActivitiesOutput)
+                updateActivityClassificationOutput(thingyActivitiesOutputIndex)
             }
         } else {
             runOnUiThread {
-                updateActivityClassificationOutput(respeckActivitiesOutput)
+                updateActivityClassificationOutput(respeckActivitiesOutputIndex)
             }
         }
     }
