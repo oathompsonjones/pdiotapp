@@ -101,12 +101,16 @@ class LiveDataActivity : AppCompatActivity() {
                     if (respeckFrames.size > 50) {
                         respeckFrames.removeAt(0)
 
-                        classify(respeckFrames.toTypedArray(), Model.RESPECK_BREATHING)
-                        predicationRespeck = classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
-                        runOnUiThread {
-                            updateBreathingClassificationOutput(respeckBreathingOutputIndex)
+                        if (time % 50 == 0f) {
+                            classify(respeckFrames.toTypedArray(), Model.RESPECK_BREATHING)
+                            predicationRespeck =
+                                classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
+                            runOnUiThread {
+                                updateBreathingClassificationOutput(respeckBreathingOutputIndex)
+                                Log.d("Classification", "Frame: $time")
+                            }
+                            compareActivityModels(predicationThingy, predicationRespeck)
                         }
-                        compareActivityModels(predicationThingy, predicationRespeck)
                     }
                 }
             }
@@ -140,7 +144,8 @@ class LiveDataActivity : AppCompatActivity() {
                     thingyFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
-                        predicationThingy = classify(thingyFrames.toTypedArray(), Model.THINGY_ACTIVITIES)
+                        if (time % 50 == 0f)
+                            predicationThingy = classify(thingyFrames.toTypedArray(), Model.THINGY_ACTIVITIES)
                     }
                 }
 
