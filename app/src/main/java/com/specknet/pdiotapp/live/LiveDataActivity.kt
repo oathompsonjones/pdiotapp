@@ -94,8 +94,9 @@ class LiveDataActivity : AppCompatActivity() {
 
                         val predication = classify(respeckFrames.toTypedArray())
                         if (predication != null) {
-                            runOnUiThread {
-                                updateClassificationOutput(predication)
+                            if (predication < 15) {
+                                runOnUiThread {
+                                    updateClassificationOutput(predication)
                                 }
                             }
                         }
@@ -133,13 +134,10 @@ class LiveDataActivity : AppCompatActivity() {
                     thingyFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
-                        val predication = classify(thingyFrames.toTypedArray())
-                        if (predication != null) {
-                            if (predication > 11 && predication < 26) {
-                                runOnUiThread {
-                                    updateClassificationOutput(predication)
-                                }
-                            }
+
+                        val predicationThingy = classify(thingyFrames.toTypedArray())
+                        runOnUiThread {
+                            updateClassificationOutput(predicationThingy)
                         }
                     }
                 }
@@ -257,57 +255,66 @@ class LiveDataActivity : AppCompatActivity() {
 
     private val respiratoryIndices = listOf(11, 12, 13, 14)
 
-    private fun classify(data: Array<FloatArray>): Pair<Int?, Int?>{
+    private fun classify(data: Array<FloatArray>): Float? {
         val inputArray = arrayOf(data)
         val outputArray = Array(1) { FloatArray(26) }
 
         tflite.run(inputArray, outputArray)
 
-        val highestOverall = outputArray[0].indices.maxByOrNull { outputArray[0][it] }
-
-        // Find the index of the highest respiratory prediction
-        val highestRespiratory = respiratoryIndices.maxByOrNull { outputArray[0][it] }
-
-        // Return both indices as a Pair
-        return Pair(highestOverall, highestRespiratory)
-
+        return outputArray[0].maxByOrNull()
     }
 
 
-    private fun updateClassificationOutput(predication: Pair<Int?, Int?> ) {
+    private fun updateClassificationOutput(predication: Int?) {
         outputView.text = buildString {
             append("Activity Classification: ")
 //            append(predication.toString())
 //            append(" - ")
             append(listOf(
-                "Respeck/DailyActivities/ascending",
-                "Respeck/DailyActivities/descending",
-                "Respeck/DailyActivities/lyingBack",
-                "Respeck/DailyActivities/lyingLeft",
-                "Respeck/DailyActivities/lyingRight",
-                "Respeck/DailyActivities/lyingStomach",
-                "Respeck/DailyActivities/miscMovement",
-                "Respeck/DailyActivities/normalWalking",
-                "Respeck/DailyActivities/running",
-                "Respeck/DailyActivities/shuffleWalking",
-                "Respeck/DailyActivities/sittingStanding",
-                "Respeck/Respiratory/breathingNormally",
-                "Respeck/Respiratory/coughing",
-                "Respeck/Respiratory/hyperventilation",
-                "Respeck/Respiratory/other",
-                "Thingy/ascending",
-                "Thingy/descending",
-                "Thingy/lyingBack",
-                "Thingy/lyingLeft",
-                "Thingy/lyingRight",
-                "Thingy/lyingStomach",
-                "Thingy/miscMovement",
-                "Thingy/normalWalking",
-                "Thingy/running",
-                "Thingy/shuffleWalking",
-                "Thingy/sittingStanding",
+                "ascending",
+                "descending",
+                "lyingBack",
+                "lyingLeft",
+                "lyingRight",
+                "lyingStomach",
+                "miscMovement",
+                "normalWalking",
+                "running",
+                "shuffleWalking",
+                "sittingStanding",
+                "breathingNormally",
+                "oughing",
+                "hyperventilation",
+                "other",
+                "ascending",
+                "descending",
+                "lyingBack",
+                "lyingLeft",
+                "lyingRight",
+                "lyingStomach",
+                "miscMovement",
+                "normalWalking",
+                "running",
+                "shuffleWalking",
+                "sittingStanding",
                 "FAIL"
             )[predication ?: 26])
+        }
+    }
+
+
+    fun compareModels(predicationThingy : Float, predicationRespeck : Float) {
+        if (predicationThingy >= predicationRespeck) {
+            val predication = predicationThingy.indices.maxByOrNull { predicationThingy[it] }
+            runOnUiThread {
+                updateClassificationOutput(predication)
+            }
+        } else {
+            val predication = predicationRespeck.indices.maxByOrNull { predicationRespeck[it] }
+            runOnUiThread {
+                updateClassificationOutput(predication)
+            }
+
         }
     }
 
