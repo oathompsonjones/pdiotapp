@@ -10,7 +10,21 @@
         android:id="@+id/ActivityClassification"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Activity Classification: " />
+        android:text="Activity Classification: "
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/BreathingClassification"  />
+
+    <TextView
+        android:id="@+id/BreathingClassification"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Breathing Classification: "
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/respeck_graphs" />
 
     <LinearLayout
         android:layout_width="match_parent"
