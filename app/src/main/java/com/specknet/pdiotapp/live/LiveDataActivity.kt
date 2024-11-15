@@ -61,6 +61,9 @@ class LiveDataActivity : AppCompatActivity() {
     private val respeckFrames: ArrayList<FloatArray> = ArrayList()
     private val thingyFrames: ArrayList<FloatArray> = ArrayList()
 
+    private val predicationThingy: FloatArray = FloatArray(26)
+    private val predicationRespeck: FloatArray = FloatArray(26)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
@@ -92,14 +95,14 @@ class LiveDataActivity : AppCompatActivity() {
                     if (respeckFrames.size > 50) {
                         respeckFrames.removeAt(0)
 
-                        val predication = classify(respeckFrames.toTypedArray())
-                        if (predication != null) {
-                            if (predication < 15) {
-                                runOnUiThread {
-                                    updateClassificationOutput(predication)
-                                }
-                            }
-                        }
+                        val predicationRespeck = classify(respeckFrames.toTypedArray())
+//                        if (predication != null) {
+//                            if (predication < 15) {
+//                                runOnUiThread {
+//                                    updateClassificationOutput(predication)
+//                                }
+//                            }
+//                        }
                     }
                 }
             }
@@ -114,13 +117,14 @@ class LiveDataActivity : AppCompatActivity() {
 
         // set up the broadcast receiver
         thingyLiveUpdateReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
+            override fun onReceive(context: Context, intent: Intent): Unit {
                 Log.i("thread", "I am running on thread = " + Thread.currentThread().name)
 
                 val action = intent.action
 
                 if (action == Constants.ACTION_THINGY_BROADCAST) {
-                    val liveData = intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
+                    val liveData =
+                        intent.getSerializableExtra(Constants.THINGY_LIVE_DATA) as ThingyLiveData
                     Log.d("Live", "onReceive: liveData = " + liveData)
 
                     // get all relevant intent contents
@@ -131,18 +135,32 @@ class LiveDataActivity : AppCompatActivity() {
                     time += 1
                     updateGraph("thingy", x, y, z, "Ascending")
 
-                    thingyFrames.add(floatArrayOf(liveData.accelX, liveData.accelY, liveData.accelZ, liveData.gyro.x, liveData.gyro.y, liveData.gyro.z))
+                    thingyFrames.add(
+                        floatArrayOf(
+                            liveData.accelX,
+                            liveData.accelY,
+                            liveData.accelZ,
+                            liveData.gyro.x,
+                            liveData.gyro.y,
+                            liveData.gyro.z
+                        )
+                    )
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
 
                         val predicationThingy = classify(thingyFrames.toTypedArray())
-                        runOnUiThread {
-                            updateClassificationOutput(predicationThingy)
-                        }
+
+//                        runOnUiThread {
+//                            updateClassificationOutput(predicationThingy)
+//                        }
                     }
                 }
+
             }
         }
+
+        compareModels(predicationThingy, predicationRespeck)
+
 
         // register receiver on another thread
         val handlerThreadThingy = HandlerThread("bgThreadThingyLive")
@@ -261,7 +279,7 @@ class LiveDataActivity : AppCompatActivity() {
 
         tflite.run(inputArray, outputArray)
 
-        return outputArray[0].maxByOrNull()
+        return outputArray[0].maxByOrNull { it }
     }
 
 
@@ -303,8 +321,8 @@ class LiveDataActivity : AppCompatActivity() {
     }
 
 
-    fun compareModels(predicationThingy : Float, predicationRespeck : Float) {
-        if (predicationThingy >= predicationRespeck) {
+    private fun compareModels(predicationThingy: FloatArray, predicationRespeck: FloatArray) {
+        if ((predicationThingy.maxOrNull() ?: 0f) >= (predicationRespeck.maxOrNull() ?: 0f)) {
             val predication = predicationThingy.indices.maxByOrNull { predicationThingy[it] }
             runOnUiThread {
                 updateClassificationOutput(predication)
@@ -314,7 +332,6 @@ class LiveDataActivity : AppCompatActivity() {
             runOnUiThread {
                 updateClassificationOutput(predication)
             }
-
         }
     }
 
