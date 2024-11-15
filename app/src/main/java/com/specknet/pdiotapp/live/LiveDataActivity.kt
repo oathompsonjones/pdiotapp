@@ -64,6 +64,9 @@ class LiveDataActivity : AppCompatActivity() {
     private val predicationThingy: FloatArray = FloatArray(26)
     private val predicationRespeck: FloatArray = FloatArray(26)
 
+    private var respeckOutputNumber: Int? = null
+    private var thingyOutputNumber: Int? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
@@ -95,7 +98,7 @@ class LiveDataActivity : AppCompatActivity() {
                     if (respeckFrames.size > 50) {
                         respeckFrames.removeAt(0)
 
-                        val predicationRespeck = classify(respeckFrames.toTypedArray())
+                        val predicationRespeck = classify(respeckFrames.toTypedArray(), "Respeck")
 //                        if (predication != null) {
 //                            if (predication < 15) {
 //                                runOnUiThread {
@@ -148,7 +151,7 @@ class LiveDataActivity : AppCompatActivity() {
                     if (thingyFrames.size > 50) {
                         thingyFrames.removeAt(0)
 
-                        val predicationThingy = classify(thingyFrames.toTypedArray())
+                        val predicationThingy = classify(thingyFrames.toTypedArray(), "Thingy")
 
 //                        runOnUiThread {
 //                            updateClassificationOutput(predicationThingy)
@@ -273,11 +276,20 @@ class LiveDataActivity : AppCompatActivity() {
 
     private val respiratoryIndices = listOf(11, 12, 13, 14)
 
-    private fun classify(data: Array<FloatArray>): Float? {
+    private fun classify(data: Array<FloatArray>, respeckOrThingy: String): Float? {
         val inputArray = arrayOf(data)
         val outputArray = Array(1) { FloatArray(26) }
 
         tflite.run(inputArray, outputArray)
+
+        if (respeckOrThingy == "Respeck") {
+            respeckOutputNumber = outputArray.indices.maxByOrNull { it }
+        } else {
+            thingyOutputNumber = outputArray.indices.maxByOrNull { it }
+        }
+
+        Log.d("Classification" , "classify: ${outputArray[0].maxByOrNull { it } }")
+        Log.d("Classification" , "classify: ${outputArray.indices.maxByOrNull { it }}")
 
         return outputArray[0].maxByOrNull { it }
     }
@@ -323,14 +335,12 @@ class LiveDataActivity : AppCompatActivity() {
 
     private fun compareModels(predicationThingy: FloatArray, predicationRespeck: FloatArray) {
         if ((predicationThingy.maxOrNull() ?: 0f) >= (predicationRespeck.maxOrNull() ?: 0f)) {
-            val predication = predicationThingy.indices.maxByOrNull { predicationThingy[it] }
             runOnUiThread {
-                updateClassificationOutput(predication)
+                updateClassificationOutput(thingyOutputNumber)
             }
         } else {
-            val predication = predicationRespeck.indices.maxByOrNull { predicationRespeck[it] }
             runOnUiThread {
-                updateClassificationOutput(predication)
+                updateClassificationOutput(respeckOutputNumber)
             }
         }
     }
