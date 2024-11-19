@@ -71,6 +71,28 @@ class LiveDataActivity : AppCompatActivity() {
     private var respeckActivitiesOutputIndex: Int? = null
     private var thingyActivitiesOutputIndex: Int? = null
 
+    private val activities = listOf(
+        "Ascending stairs",
+        "Descending stairs",
+        "Lying on your back",
+        "Lying on your left",
+        "Lying on your right",
+        "Lying on your front",
+        "Miscellaneous movement",
+        "Walking normally",
+        "Running",
+        "Shuffle walking",
+        "Sitting/standing",
+        "Error 404: Movement not found"
+    )
+    private val breathing = listOf(
+        "Breathing normally",
+        "Coughing",
+        "Hyperventilating",
+        "Other (e.g. talking, singing, laughing, eating)",
+        "Error 404: Breathing not found"
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_live_data)
@@ -302,36 +324,12 @@ class LiveDataActivity : AppCompatActivity() {
 
 
     private fun updateActivityClassificationOutput(predication: Int?) {
-        avtivityClassificationView.text = buildString {
-            append(listOf(
-                "Ascending stairs",
-                "Descending stairs",
-                "Lying on your back",
-                "Lying on your left",
-                "Lying on your right",
-                "Lying on your front",
-                "Miscellaneous movement",
-                "Walking normally",
-                "Running",
-                "Shuffle walking",
-                "Sitting/standing",
-                "Error 404: Movement not found"
-            )[predication ?: 11])
-        }
+        avtivityClassificationView.text = activities[predication ?: 11]
     }
 
     private fun updateBreathingClassificationOutput(predication: Int?) {
-        breathingClassificationView.text = buildString {
-            append(listOf(
-                "Breathing normally",
-                "Coughing",
-                "Hyperventilating",
-                "Other (e.g. talking, laughing, eating)",
-                "Error 404: Breathing not found"
-            )[predication ?: 4])
-        }
+        breathingClassificationView.text = breathing[predication ?: 4]
     }
-
 
     private fun compareActivityModels(predicationThingy: Float?, predicationRespeck: Float?) {
         if ((predicationThingy ?: 0f) >= (predicationRespeck ?: 0f)) {
