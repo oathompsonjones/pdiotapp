@@ -41,7 +41,7 @@
             android:id="@+id/log_button"
             android:layout_width="550px"
             android:layout_height="wrap_content"
-            android:text="Log Book"
+            android:text="Logbook"
             android:background="#1c7eea"
             android:textColor="#FFFFFF"
             android:textAllCaps="false"

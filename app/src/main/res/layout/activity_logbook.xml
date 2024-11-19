@@ -10,20 +10,229 @@
         android:id="@+id/logbook"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Log Book"
+        android:padding="8dp"
+        android:text="Logbook"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textAlignment="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
+    <TableLayout
+        android:id="@+id/datePickerGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:stretchColumns="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/logbook">
+        <TableRow>
+            <TextView
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/logbook"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Date:" />
+            <EditText
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/logbook"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:id="@+id/datePicker"
+                android:text="1970-01-01" />
+        </TableRow>
+    </TableLayout>
+
+    <TableLayout
         android:id="@+id/logbook_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:padding="8dp"
+        android:stretchColumns="1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logbook">
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@id/datePickerGroup">
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent ascending stairs:" />
+            <TextView
+                android:id="@+id/ascend"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent descending stairs:" />
+            <TextView
+                android:id="@+id/descend"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent lying on your back:" />
+            <TextView
+                android:id="@+id/back"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent lying on your left side:" />
+            <TextView
+                android:id="@+id/left"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent lying on your right side:" />
+            <TextView
+                android:id="@+id/right"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent lying on your front:" />
+            <TextView
+                android:id="@+id/front"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent in miscellaneous movements:" />
+            <TextView
+                android:id="@+id/misc"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent walking:" />
+            <TextView
+                android:id="@+id/walk"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent running:" />
+            <TextView
+                android:id="@+id/run"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent shuffle walking:" />
+            <TextView
+                android:id="@+id/shuffle"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent sitting down or standing up:" />
+            <TextView
+                android:id="@+id/sitStand"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent breathing normally:" />
+            <TextView
+                android:id="@+id/breathe"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent coughing:" />
+            <TextView
+                android:id="@+id/cough"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent hyperventilating:" />
+            <TextView
+                android:id="@+id/hyperventilate"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Time spent talking/singing/laughing/eating:" />
+            <TextView
+                android:id="@+id/other"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:gravity="end"
+                android:text="00:00:00" />
+        </TableRow>
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
