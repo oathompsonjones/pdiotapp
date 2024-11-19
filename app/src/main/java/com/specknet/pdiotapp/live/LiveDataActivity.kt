@@ -24,6 +24,9 @@ import com.specknet.pdiotapp.utils.ThingyLiveData
 import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.nio.channels.FileChannel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class LiveDataActivity : AppCompatActivity() {
@@ -125,13 +128,13 @@ class LiveDataActivity : AppCompatActivity() {
 
                         if (time % 50 == 0f) {
                             classify(respeckFrames.toTypedArray(), Model.RESPECK_BREATHING)
-                            predicationRespeck =
-                                classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
+                            predicationRespeck = classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
                             runOnUiThread {
                                 updateBreathingClassificationOutput(respeckBreathingOutputIndex)
                                 Log.d("Classification", "Frame: $time")
                             }
                             compareActivityModels(predicationThingy, predicationRespeck)
+                            saveClassification(respeckBreathingOutputIndex, true)
                         }
                     }
                 }
@@ -322,6 +325,32 @@ class LiveDataActivity : AppCompatActivity() {
         return outputArray[0].maxByOrNull { it }
     }
 
+    private fun saveClassification(prediction: Int?, isBreathingData: Boolean) {
+        if (prediction == null) return
+
+        // Get the current date
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        // Check if a file exists for today
+        val files = filesDir.listFiles()
+        var file = files?.find { it.name == "${date}.csv" }
+        if (file == null) {
+            file = filesDir.resolve("${date}.csv")
+            file.createNewFile()
+            file.appendText("0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
+        }
+
+        // Update the file with the new classification
+        // FILE FORMAT: upStair,downStair,lieBack,lieLeft,lieRight,lieFront,miscMove,walk,run,shuffle,sitStand,breathe,cough,hyperventilate,other
+        val currentData = file.readText().split(",")
+        val index = if (isBreathingData) prediction + 11 else prediction
+        var data = ""
+        for (i in currentData.indices) {
+            data += if (i == index) (currentData[i].toInt() + 1).toString() else currentData[i]
+            data += if (i == currentData.size - 1) "" else ","
+        }
+        file.writeText(data)
+    }
 
     private fun updateActivityClassificationOutput(predication: Int?) {
         avtivityClassificationView.text = activities[predication ?: 11]
@@ -336,10 +365,12 @@ class LiveDataActivity : AppCompatActivity() {
             runOnUiThread {
                 updateActivityClassificationOutput(thingyActivitiesOutputIndex)
             }
+            saveClassification(thingyActivitiesOutputIndex, false)
         } else {
             runOnUiThread {
                 updateActivityClassificationOutput(respeckActivitiesOutputIndex)
             }
+            saveClassification(respeckActivitiesOutputIndex, false)
         }
     }
 

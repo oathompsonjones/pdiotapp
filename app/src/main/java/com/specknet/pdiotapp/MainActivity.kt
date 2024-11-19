@@ -20,6 +20,7 @@ import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
 import com.specknet.pdiotapp.live.LiveDataActivity
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
+import com.specknet.pdiotapp.LogBookActivity
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.Utils
 import kotlinx.android.synthetic.main.activity_main.*
@@ -29,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     // buttons and textviews
     lateinit var liveProcessingButton: Button
     lateinit var pairingButton: Button
-//    lateinit var recordButton: Button
+    lateinit var logButton: Button
 
     // permissions
     lateinit var permissionAlertDialog: AlertDialog.Builder
@@ -65,7 +66,7 @@ class MainActivity : AppCompatActivity() {
 
         liveProcessingButton = findViewById(R.id.live_button)
         pairingButton = findViewById(R.id.ble_button)
-//        recordButton = findViewById(R.id.record_button)
+        logButton = findViewById(R.id.log_button)
 
         permissionAlertDialog = AlertDialog.Builder(this)
 
@@ -92,15 +93,15 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-//        recordButton.setOnClickListener {
-//            val intent = Intent(this, RecordingActivity::class.java)
-//            startActivity(intent)
-//        }
+        logButton.setOnClickListener {
+            val intent = Intent(this, LogBookActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     fun setupPermissions() {
         // BLE permissions
-        Log.i("Permissions", "BLE permission = " + blePermissionGranted)
+        Log.i("Permissions", "BLE permission = $blePermissionGranted")
         if (ActivityCompat.checkSelfPermission(applicationContext,
                 Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
             permissionsForRequest.add(Manifest.permission.BLUETOOTH_SCAN)
@@ -112,7 +113,7 @@ class MainActivity : AppCompatActivity() {
 
 
         // location permission
-        Log.i("Permissions", "Location permission = " + locationPermissionGranted)
+        Log.i("Permissions", "Location permission = $locationPermissionGranted")
         if (ActivityCompat.checkSelfPermission(applicationContext,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissionsForRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -123,10 +124,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         // camera permission
-        Log.i("Permissions", "Camera permission = " + cameraPermissionGranted)
+        Log.i("Permissions", "Camera permission = $cameraPermissionGranted")
         if (ActivityCompat.checkSelfPermission(applicationContext,
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            Log.i("Permissions", "Camera permission = " + cameraPermissionGranted)
+            Log.i("Permissions", "Camera permission = $cameraPermissionGranted")
             permissionsForRequest.add(Manifest.permission.CAMERA)
         }
         else {
@@ -134,10 +135,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         // read storage permission
-        Log.i("Permissions", "Read st permission = " + readStoragePermissionGranted)
+        Log.i("Permissions", "Read st permission = $readStoragePermissionGranted")
         if (ActivityCompat.checkSelfPermission(applicationContext,
                 Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            Log.i("Permissions", "Read st permission = " + readStoragePermissionGranted)
+            Log.i("Permissions", "Read st permission = $readStoragePermissionGranted")
             permissionsForRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
         else {
@@ -145,10 +146,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         // write storage permission
-        Log.i("Permissions", "Write storage permission = " + writeStoragePermissionGranted)
+        Log.i("Permissions", "Write storage permission = $writeStoragePermissionGranted")
         if (ActivityCompat.checkSelfPermission(applicationContext,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            Log.i("Permissions", "Write storage permission = " + writeStoragePermissionGranted)
+            Log.i("Permissions", "Write storage permission = $writeStoragePermissionGranted")
             permissionsForRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
         else {
@@ -165,7 +166,7 @@ class MainActivity : AppCompatActivity() {
 
     fun setupBluetoothService() {
         val isServiceRunning = Utils.isServiceRunning(BluetoothSpeckService::class.java, applicationContext)
-        Log.i("debug","isServiceRunning = " + isServiceRunning)
+        Log.i("debug", "isServiceRunning = $isServiceRunning")
 
         // check sharedPreferences for an existing Respeck id
         val sharedPreferences = getSharedPreferences(Constants.PREFERENCES_FILE, Context.MODE_PRIVATE)
