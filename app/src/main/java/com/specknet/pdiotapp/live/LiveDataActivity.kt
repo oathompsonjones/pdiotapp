@@ -303,33 +303,31 @@ class LiveDataActivity : AppCompatActivity() {
 
     private fun updateActivityClassificationOutput(predication: Int?) {
         avtivityClassificationView.text = buildString {
-            append("Activity Classification: ")
             append(listOf(
-                "ascending",
-                "descending",
-                "lyingBack",
-                "lyingLeft",
-                "lyingRight",
-                "lyingStomach",
-                "miscMovement",
-                "normalWalking",
-                "running",
-                "shuffleWalking",
-                "sittingStanding",
-                "FAIL"
+                "Ascending stairs",
+                "Descending stairs",
+                "Lying on your back",
+                "Lying on your left",
+                "Lying on your right",
+                "Lying on your front",
+                "Miscellaneous movement",
+                "Walking normally",
+                "Running",
+                "Shuffle walking",
+                "Sitting/standing",
+                "Error 404: Movement not found"
             )[predication ?: 11])
         }
     }
 
     private fun updateBreathingClassificationOutput(predication: Int?) {
         breathingClassificationView.text = buildString {
-            append("Breathing Classification: ")
             append(listOf(
-                "breathingNormally",
-                "coughing",
-                "hyperventilation",
-                "other",
-                "FAIL"
+                "Breathing normally",
+                "Coughing",
+                "Hyperventilating",
+                "Other (e.g. talking, laughing, eating)",
+                "Error 404: Breathing not found"
             )[predication ?: 4])
         }
     }
