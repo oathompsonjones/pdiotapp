@@ -90,7 +90,7 @@ class LiveDataActivity : AppCompatActivity() {
         "Coughing",
         "Hyperventilating",
         "Other (e.g. talking, singing, laughing, eating)",
-        "Error 404: Breathing not found"
+        "Undefined"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -124,11 +124,12 @@ class LiveDataActivity : AppCompatActivity() {
                         respeckFrames.removeAt(0)
 
                         if (time % 50 == 0f) {
+                            runOnUiThread {
+                                updateBreathingClassificationOutput(respeckBreathingOutputIndex)
                             classify(respeckFrames.toTypedArray(), Model.RESPECK_BREATHING)
                             predicationRespeck =
                                 classify(respeckFrames.toTypedArray(), Model.RESPECK_ACTIVITIES)
-                            runOnUiThread {
-                                updateBreathingClassificationOutput(respeckBreathingOutputIndex)
+
                                 Log.d("Classification", "Frame: $time")
                             }
                             compareActivityModels(predicationThingy, predicationRespeck)
@@ -323,8 +324,10 @@ class LiveDataActivity : AppCompatActivity() {
     }
 
 
-    private fun updateActivityClassificationOutput(predication: Int?) {
+    private fun updateActivityClassificationOutput(predication: Int?)  {
         avtivityClassificationView.text = activities[predication ?: 11]
+        if (predication !in listOf(2,3,4,5,10))
+            breathingClassificationView.text = breathing[4]
     }
 
     private fun updateBreathingClassificationOutput(predication: Int?) {
@@ -352,6 +355,7 @@ class LiveDataActivity : AppCompatActivity() {
         tfliteRespeckBreathing.close()
         tfliteRespeckActivities.close()
         tfliteThingyActivities.close()
+
     }
 
     private enum class Model {
