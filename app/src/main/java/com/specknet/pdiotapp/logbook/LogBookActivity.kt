@@ -1,4 +1,4 @@
-package com.specknet.pdiotapp
+package com.specknet.pdiotapp.logbook
 
 import android.os.Bundle
 import android.text.Editable
@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.specknet.pdiotapp.R
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

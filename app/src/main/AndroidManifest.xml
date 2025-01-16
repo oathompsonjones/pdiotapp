@@ -83,7 +83,7 @@
             android:exported="true"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".LogBookActivity"
+            android:name=".logbook.LogBookActivity"
             android:exported="true"
             android:screenOrientation="portrait" />
         <activity

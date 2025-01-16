@@ -282,11 +282,11 @@ class LiveDataActivity : AppCompatActivity() {
         avtivityClassificationView = findViewById(R.id.ActivityClassification)
         breathingClassificationView = findViewById(R.id.BreathingClassification)
 
-        var file = assets.openFd("respeck-breathing_128-16.tflite")
+        var file = assets.openFd("respeck_breathing.tflite")
         tfliteRespeckBreathing = Interpreter(FileInputStream(file.fileDescriptor).channel
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
 
-        file = assets.openFd("respeck-activities_128-16.tflite")
+        file = assets.openFd("respeck_activities.tflite")
         tfliteRespeckActivities = Interpreter(FileInputStream(file.fileDescriptor).channel
             .map(FileChannel.MapMode.READ_ONLY, file.startOffset, file.declaredLength))
 

@@ -20,7 +20,7 @@ import com.specknet.pdiotapp.bluetooth.BluetoothSpeckService
 import com.specknet.pdiotapp.bluetooth.ConnectingActivity
 import com.specknet.pdiotapp.live.LiveDataActivity
 import com.specknet.pdiotapp.onboarding.OnBoardingActivity
-import com.specknet.pdiotapp.LogBookActivity
+import com.specknet.pdiotapp.logbook.LogBookActivity
 import com.specknet.pdiotapp.utils.Constants
 import com.specknet.pdiotapp.utils.Utils
 import kotlinx.android.synthetic.main.activity_main.*
